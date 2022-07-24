@@ -14,6 +14,9 @@
 #include "model_handler.h"
 #include "led_strip.h"
 
+#include <logging/log.h>
+LOG_MODULE_REGISTER(app_model_handler, LOG_LEVEL_INF);
+
 struct light_hsl_ctx {
 	const struct bt_mesh_light_hsl_srv *hsl_srv;
 
@@ -239,6 +242,23 @@ static void light_get(struct bt_mesh_lightness_srv *srv,
 	rsp->remaining_time = lh_ctx->lvl_rem_time;
 }
 
+
+static void start_new_hue_trans(const struct bt_mesh_light_hue *set,
+				  struct light_hsl_ctx *ctx)
+{
+	uint32_t step_cnt = abs(set->lvl - ctx->current_hue);
+	uint32_t time = set->transition ? set->transition->time : 0;
+	uint32_t delay = set->transition ? set->transition->delay : 0;
+
+	ctx->target_hue = set->lvl;
+	ctx->hue_time_per = (step_cnt ? time / step_cnt : 0);
+	ctx->hue_rem_time = time;
+	k_work_reschedule(&ctx->hue_per_work, K_MSEC(delay));
+
+	printk("New hue transition-> Lvl: %d, Time: %d, Delay: %d\n",
+	       set->lvl, time, delay);
+}
+
 static void periodic_hue_work(struct k_work *work)
 {
 	struct light_hsl_ctx *lh_ctx = &my_hsl_ctx;
@@ -276,22 +296,6 @@ static void periodic_hue_work(struct k_work *work)
 		bt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_BLUE));
 
 	printk("Current light hue: %u/65535\n", lh_ctx->current_hue);
-}
-
-static void start_new_hue_trans(const struct bt_mesh_light_hue *set,
-				  struct light_hsl_ctx *ctx)
-{
-	uint32_t step_cnt = abs(set->lvl - ctx->current_hue);
-	uint32_t time = set->transition ? set->transition->time : 0;
-	uint32_t delay = set->transition ? set->transition->delay : 0;
-
-	ctx->target_hue = set->lvl;
-	ctx->hue_time_per = (step_cnt ? time / step_cnt : 0);
-	ctx->hue_rem_time = time;
-	k_work_reschedule(&ctx->hue_per_work, K_MSEC(delay));
-
-	printk("New hue transition-> Lvl: %d, Time: %d, Delay: %d\n",
-	       set->lvl, time, delay);
 }
 
 static void light_hue_set(struct bt_mesh_light_hue_srv *srv,
@@ -376,6 +380,23 @@ static void light_hue_move_set(struct bt_mesh_light_hue_srv *srv,
 	rsp->target = lh_ctx->target_hue;
 }
 
+
+static void start_new_sat_trans(const struct bt_mesh_light_sat *set,
+				  struct light_hsl_ctx *ctx)
+{
+	uint32_t step_cnt = abs(set->lvl - ctx->current_sat);
+	uint32_t time = set->transition ? set->transition->time : 0;
+	uint32_t delay = set->transition ? set->transition->delay : 0;
+
+	ctx->target_sat = set->lvl;
+	ctx->sat_time_per = (step_cnt ? time / step_cnt : 0);
+	ctx->sat_rem_time = time;
+	k_work_reschedule(&ctx->sat_per_work, K_MSEC(delay));
+
+	printk("New sat transition-> Lvl: %d, Time: %d, Delay: %d\n",
+	       set->lvl, time, delay);
+}
+
 static void periodic_sat_work(struct k_work *work)
 {
 	struct light_hsl_ctx *lh_ctx = &my_hsl_ctx;
@@ -413,22 +434,6 @@ static void periodic_sat_work(struct k_work *work)
 		bt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_BLUE));
 
 	printk("Current light sat: %u/65535\n", lh_ctx->current_sat);
-}
-
-static void start_new_sat_trans(const struct bt_mesh_light_sat *set,
-				  struct light_hsl_ctx *ctx)
-{
-	uint32_t step_cnt = abs(set->lvl - ctx->current_sat);
-	uint32_t time = set->transition ? set->transition->time : 0;
-	uint32_t delay = set->transition ? set->transition->delay : 0;
-
-	ctx->target_sat = set->lvl;
-	ctx->sat_time_per = (step_cnt ? time / step_cnt : 0);
-	ctx->sat_rem_time = time;
-	k_work_reschedule(&ctx->sat_per_work, K_MSEC(delay));
-
-	printk("New sat transition-> Lvl: %d, Time: %d, Delay: %d\n",
-	       set->lvl, time, delay);
 }
 
 static void light_sat_set(struct bt_mesh_light_sat_srv *srv,
@@ -480,7 +485,7 @@ static void light_sat_get(struct bt_mesh_light_sat_srv *srv,
 	rsp->target = lh_ctx->target_sat;
 }
 
-static struct bt_mesh_light_ctrl_srv light_ctrl_srv = BT_MESH_LIGHT_CTRL_SRV_INIT(&my_lightness_srv);
+static struct bt_mesh_light_ctrl_srv my_light_ctrl_srv = BT_MESH_LIGHT_CTRL_SRV_INIT(&my_lightness_srv);
 
 static struct bt_mesh_elem elements[] = {
 	BT_MESH_ELEM(1,
@@ -500,7 +505,7 @@ static struct bt_mesh_elem elements[] = {
 			 BT_MESH_MODEL_NONE),
 	BT_MESH_ELEM(4,
 			 BT_MESH_MODEL_LIST(
-			     BT_MESH_MODEL_LIGHT_CTRL_SRV(&light_ctrl_srv)),
+			     BT_MESH_MODEL_LIGHT_CTRL_SRV(&my_light_ctrl_srv)),
 			 BT_MESH_MODEL_NONE),
 };
 
@@ -528,7 +533,7 @@ void model_handler_start(void)
 		return;
 	}
 
-	err = bt_mesh_light_ctrl_srv_enable(&light_ctrl_srv);
+	err = bt_mesh_light_ctrl_srv_enable(&my_light_ctrl_srv);
 	if (!err) {
 		printk("Successfully enabled LC server\n");
 	}

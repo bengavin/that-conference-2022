@@ -31,6 +31,12 @@ int init_neopixel(void) {
     set_neopixel(0, 0, 255);
     k_sleep(K_MSEC(500));
     set_neopixel(0, 0, 0);
+    k_sleep(K_MSEC(500));
+    for(int i = 0; i < 100; i++)
+    {
+        update_neopixel();
+        k_sleep(K_MSEC(50));
+    }
 #endif
 
     return 0;

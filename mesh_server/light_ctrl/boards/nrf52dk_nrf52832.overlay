@@ -1,0 +1,31 @@
+#include <dt-bindings/led/led.h>
+
+#include "../include/nrf52-bindings.h"
+
+&spi1 {
+    compatible = "nordic,nrf-spim";
+
+    led_strip: ws2812@0 {
+        compatible = "worldsemi,ws2812-spi";
+        label = "WS2812";
+
+        /* SPI */
+        reg = <0>; /* ignored, but necessary for SPI bindings */
+        spi-max-frequency = <SPI_FREQ>;
+
+        /* WS2812 */
+        chain-length = <8>; /* arbitrary; change at will */
+        color-mapping = <LED_COLOR_ID_GREEN
+                    LED_COLOR_ID_RED
+                    LED_COLOR_ID_BLUE>;
+        spi-one-frame = <ONE_FRAME>;
+        spi-zero-frame = <ZERO_FRAME>;
+    };
+
+};
+
+/ {
+    aliases {
+        led-strip = &led_strip;
+    };
+};

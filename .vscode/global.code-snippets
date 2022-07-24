@@ -1,0 +1,348 @@
+/*
+Generated from SnippetsLab export with jq utility:
+jq '.contents.snippets[] as $snippets | ($snippets.title|split(" ")) as $titlebits|{"snippet": $snippets,"idx":$titlebits[0]}|{(.snippet.title): { "prefix": [("tc"+.idx)], "body": [.snippet.fragments[0].content], "description": .snippet.title}}' | jq 'reduce inputs as $in (.; . + $in)'
+*/
+{
+  "00 - Xenon Device Tree - Includes": {
+    "prefix": [
+      "tc00"
+    ],
+    "body": [
+      "#include <dt-bindings/led/led.h>\n\n#include \"../include/nrf52-bindings.h\"\n\n#include <../boards/arm/particle_xenon/dts/mesh_feather_spi_spi1.dtsi>\n"
+    ],
+    "description": "01 - Xenon Device Tree - Includes"
+  },
+  "01 - nRF52 Include file": {
+    "prefix": [
+      "tc01"
+    ],
+    "body": [
+      "/*\n * Copyright (c) 2019, Nordic Semiconductor ASA\n *\n * SPDX-License-Identifier: Apache-2.0\n */\n\n#ifndef ZEPHYR_SAMPLES_DRIVERS_LED_WS2812_H_\n#define ZEPHYR_SAMPLES_DRIVERS_LED_WS2812_H_\n\n/*\n * At 4 MHz, 1 bit is 250 ns, so 3 bits is 750 ns.\n *\n * That's cutting it a bit close to the edge of the timing parameters,\n * but it seems to work on AdaFruit LED rings.\n */\n#define SPI_FREQ    4000000\n#define ZERO_FRAME  0x40\n#define ONE_FRAME   0x70\n\n#endif\n"
+    ],
+    "description": "00 - nRF52 Include file"
+  },
+  "02 - Xenon Device Tree - PINCTRL": {
+    "prefix": [
+      "tc02"
+    ],
+    "body": [
+      "&pinctrl {\n    pwm0_default: pwm0_default {\n\t\tgroup1 {\n\t\t\tpsels = <NRF_PSEL(PWM_OUT0, 0, 13)>,\n                    <NRF_PSEL(PWM_OUT1, 0, 14)>,\n                    <NRF_PSEL(PWM_OUT2, 0, 15)>;\n\t\t\tnordic,invert;\n\t\t};\n\t};\n\n\tpwm0_sleep: pwm0_sleep {\n\t\tgroup1 {\n\t\t\tpsels = <NRF_PSEL(PWM_OUT0, 0, 13)>,\n                    <NRF_PSEL(PWM_OUT1, 0, 14)>,\n                    <NRF_PSEL(PWM_OUT2, 0, 15)>;\n\t\t\tlow-power-enable;\n\t\t};\n\t};\n};\n"
+    ],
+    "description": "02 - Xenon Device Tree - PINCTRL"
+  },
+  "03 - Xenon Device Tree - PWM": {
+    "prefix": [
+      "tc03"
+    ],
+    "body": [
+      "&pwm0 {\n    status = \"okay\";\n    pinctrl-0 = <&pwm0_default>;\n\tpinctrl-1 = <&pwm0_sleep>;\n\tpinctrl-names = \"default\", \"sleep\";\n};\n"
+    ],
+    "description": "03 - Xenon Device Tree - PWM"
+  },
+  "04 - Xenon Device Tree - Feather SPI": {
+    "prefix": [
+      "tc04"
+    ],
+    "body": [
+      "&feather_spi { /* MOSI on feather_spi1 */\n    compatible = \"nordic,nrf-spim\";\n\n    led_strip: ws2812@0 {\n        compatible = \"worldsemi,ws2812-spi\";\n        label = \"WS2812\";\n\n        /* SPI */\n        reg = <0>; /* ignored, but necessary for SPI bindings */\n        spi-max-frequency = <SPI_FREQ>;\n\n        /* WS2812 */\n        chain-length = <8>; /* arbitrary; change at will */\n        color-mapping = <LED_COLOR_ID_GREEN\n                    LED_COLOR_ID_RED\n                    LED_COLOR_ID_BLUE>;\n        spi-one-frame = <ONE_FRAME>;\n        spi-zero-frame = <ZERO_FRAME>;\n    };\n};\n"
+    ],
+    "description": "04 - Xenon Device Tree - Feather SPI"
+  },
+  "05 - Xenon Device Tree - Aliases": {
+    "prefix": [
+      "tc05"
+    ],
+    "body": [
+      "/ {\n    pwmleds {\n        compatible = \"pwm-leds\";\n        red_led_pwm: led_pwm_0 {\n                pwms = <&pwm0 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;\n                label = \"Red PWM LED\";\n        };\n\n        green_led_pwm: led_pwm_1 {\n                pwms = <&pwm0 1 PWM_MSEC(20) PWM_POLARITY_INVERTED>;\n                label = \"Green PWM LED\";\n        };\n\n        blue_led_pwm: led_pwm_2 {\n                pwms = <&pwm0 2 PWM_MSEC(20) PWM_POLARITY_INVERTED>;\n                label = \"Blue PWM LED\";\n        };\n    };\n\n    aliases {\n        led0 = &status_red;\n        led1 = &status_green;\n        led2 = &status_blue;\n        led3 = &user_led;\n        pwm-led0 = &red_led_pwm;\n        pwm-led1 = &green_led_pwm;\n        pwm-led2 = &blue_led_pwm;\n        led-strip = &led_strip;\n    };\n};\n"
+    ],
+    "description": "05 - Xenon Device Tree - Aliases"
+  },
+  "06 - Xenon - conf": {
+    "prefix": [
+      "tc06"
+    ],
+    "body": [
+      "CONFIG_GPIO=y\nCONFIG_PWM=y\nCONFIG_PINCTRL=y\nCONFIG_SPI=y\nCONFIG_WS2812_STRIP_SPI=y\n"
+    ],
+    "description": "06 - Xenon - conf"
+  },
+  "07 - Includes - Neopixel": {
+    "prefix": [
+      "tc07"
+    ],
+    "body": [
+      "#ifndef __APP_NEOPIXEL_H\n#define __APP_NEOPIXEL_H\n\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n#define RGB(_r, _g, _b) { .r = (_r), .g = (_g), .b = (_b) }\n\n// TODO: Add neopixel prototypes here\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif\n"
+    ],
+    "description": "07 - Includes - Neopixel"
+  },
+  "08 - Includes - led_strip": {
+    "prefix": [
+      "tc08"
+    ],
+    "body": [
+      "#ifndef __APP_LED_STRIP_H\n#define __APP_LED_STRIP_H\n\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n#include <stdint.h>\n\n#define SCALE_16_TO_8(_val) ((uint8_t)((_val / (float)UINT16_MAX) * UINT8_MAX))\n\nint init_led_strip(void);\nvoid update_led_strip(void);\nvoid set_led_strip(uint16_t red, uint16_t green, uint16_t blue);\n\n#ifdef __cplusplus\n}\n#endif\n\n#endif\n"
+    ],
+    "description": "08 - Includes - led_strip"
+  },
+  "09 - Main.c - logging": {
+    "prefix": [
+      "tc09"
+    ],
+    "body": [
+      "#include <logging/log.h>\n\nLOG_MODULE_REGISTER(app_light_ctrl, LOG_LEVEL_INF);\n"
+    ],
+    "description": "09 - Main.c - logging"
+  },
+  "10 - Main.c - Init led_strip": {
+    "prefix": [
+      "tc10"
+    ],
+    "body": [
+      "\tprintk(\"Initializing...\\n\");\n\n\tprintk(\"Verifying Hardware Connectivity...\\n\");\n\terr = init_led_strip();\n\tif (err) {\n\t\tprintk(\"LED Strip initialization failed...\\n\");\n\t}\n\t"
+    ],
+    "description": "10 - Main.c - Init led_strip"
+  },
+  "11 - led_strip.c - Includes": {
+    "prefix": [
+      "tc11"
+    ],
+    "body": [
+      "#include <zephyr.h>\n#include <device.h>\n#include <logging/log.h>\n#include <drivers/led_strip.h>\n#include <drivers/spi.h>\n\n#include \"led_strip.h\"\n#include \"neopixel.h\"\n\nLOG_MODULE_REGISTER(app_led_strip, LOG_LEVEL_DBG);\n"
+    ],
+    "description": "11 - led_strip.c - Includes"
+  },
+  "12 - led_strip.c - Devices": {
+    "prefix": [
+      "tc12"
+    ],
+    "body": [
+      "#define STRIP_NODE\t\tDT_ALIAS(led_strip)\n#define STRIP_NUM_PIXELS\tDT_PROP(STRIP_NODE, chain_length)\n\nstatic const struct device *strip = DEVICE_DT_GET(STRIP_NODE);\n"
+    ],
+    "description": "12 - led_strip.c - Devices"
+  },
+  "13 - led_strip.c - module variables": {
+    "prefix": [
+      "tc13"
+    ],
+    "body": [
+      "static const struct led_rgb colors[] = {\n\tRGB(0x0f, 0x00, 0x00), /* red */\n\tRGB(0x00, 0x0f, 0x00), /* green */\n\tRGB(0x00, 0x00, 0x0f), /* blue */\n};\n\nstruct led_rgb pixels[STRIP_NUM_PIXELS];\nstatic size_t cursor = 0, color = 0;\n\nstatic bool strip_enabled = false;\n"
+    ],
+    "description": "13 - led_strip.c - module variables"
+  },
+  "14 - led_strip.c - init_led_strip": {
+    "prefix": [
+      "tc14"
+    ],
+    "body": [
+      "int init_led_strip(void) {\n\tif (device_is_ready(strip)) {\n\t\tLOG_INF(\"Found LED strip device %s\", strip->name);\n\t\tstrip_enabled = true;\n\t} else {\n\t\tLOG_ERR(\"LED strip device %s is not ready\", strip->name);\n\t\treturn -ENOTSUP;\n\t}\n\n    // Exercise the LEDs a bit to give user feedback\n    set_led_strip(UINT16_MAX, 0, 0);\n    k_sleep(K_MSEC(250));\n    set_led_strip(0, UINT16_MAX, 0);\n    k_sleep(K_MSEC(250));\n    set_led_strip(0, 0, UINT16_MAX);\n    k_sleep(K_MSEC(250));\n    set_led_strip(0, 0, 0);\n    k_sleep(K_MSEC(250));\n    for(int i = 0; i < 2*STRIP_NUM_PIXELS; i++) {\n        update_led_strip();\n        k_sleep(K_MSEC(100));\n    }\n    set_led_strip(0, 0, 0);\n\n    return 0;    \n\n}\n"
+    ],
+    "description": "14 - led_strip.c - init_led_strip"
+  },
+  "15 - led_strip.c - set_led_strip": {
+    "prefix": [
+      "tc15"
+    ],
+    "body": [
+      "void set_led_strip(uint16_t red, uint16_t green, uint16_t blue) {\n    if (!strip_enabled) { return; }\n\n    struct led_rgb color = RGB(SCALE_16_TO_8(red), SCALE_16_TO_8(green), SCALE_16_TO_8(blue));\n\n    LOG_INF(\"Setting LED Strip to color: (%d, %d, %d)\", color.r, color.g, color.b);\n\n    memset(&pixels, 0x00, sizeof(pixels));\n    for(int i = 0; i < STRIP_NUM_PIXELS; i++) \n    { \n        memcpy(&pixels[i], &color, sizeof(struct led_rgb));\n    }\n\n    int rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);\n    if (rc) {\n        LOG_ERR(\"couldn't update strip: %d\", rc);\n    }\n}\n"
+    ],
+    "description": "15 - led_strip.c - set_led_strip"
+  },
+  "16 - led_strip.c - update_led_strip": {
+    "prefix": [
+      "tc16"
+    ],
+    "body": [
+      "void update_led_strip(void) {\n    if (!strip_enabled) { return; }\n\n\tif (cursor == 0) {\n        LOG_INF(\"Displaying pattern on strip\");\n    }\n\n    memset(&pixels, 0x00, sizeof(pixels));\n    memcpy(&pixels[cursor], &colors[color], sizeof(struct led_rgb));\n    int rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);\n\n    if (rc) {\n        LOG_ERR(\"couldn't update strip: %d\", rc);\n    }\n\n    cursor++;\n    if (cursor >= STRIP_NUM_PIXELS) {\n        cursor = 0;\n        color++;\n        if (color == ARRAY_SIZE(colors)) {\n            color = 0;\n        }\n    }\n}\n"
+    ],
+    "description": "16 - led_strip.c - update_led_strip"
+  },
+  "17 - model_handler.c - includes": {
+    "prefix": [
+      "tc17"
+    ],
+    "body": [
+      "#include <zephyr/bluetooth/bluetooth.h>\n#include <bluetooth/mesh/models.h>\n#include <bluetooth/mesh/light_hsl.h>\n#include <bluetooth/mesh/light_hue_srv.h>\n#include <bluetooth/mesh/light_sat_srv.h>\n#include <bluetooth/mesh/light_hsl_srv.h>\n#include <dk_buttons_and_leds.h>\n#include \"model_handler.h\"\n#include \"led_strip.h\"\n\n#include <logging/log.h>\nLOG_MODULE_REGISTER(app_model_handler, LOG_LEVEL_INF);\n"
+    ],
+    "description": "17 - model_handler.c - includes"
+  },
+  "18 - model_handler.c - callbacks": {
+    "prefix": [
+      "tc18"
+    ],
+    "body": [
+      "/* Pre-declare local static functions for use in callback definitions */\nstatic void light_set(struct bt_mesh_lightness_srv *srv, struct bt_mesh_msg_ctx *ctx, const struct bt_mesh_lightness_set *set, struct bt_mesh_lightness_status *rsp);\nstatic void light_get(struct bt_mesh_lightness_srv *srv, struct bt_mesh_msg_ctx *ctx, struct bt_mesh_lightness_status *rsp);\n\nstatic void light_hue_set(struct bt_mesh_light_hue_srv *srv, struct bt_mesh_msg_ctx *ctx, const struct bt_mesh_light_hue *set, struct bt_mesh_light_hue_status *rsp);\nstatic void light_hue_get(struct bt_mesh_light_hue_srv *srv, struct bt_mesh_msg_ctx *ctx, struct bt_mesh_light_hue_status *rsp);\nstatic void light_hue_delta_set(struct bt_mesh_light_hue_srv *srv, struct bt_mesh_msg_ctx *ctx, const struct bt_mesh_light_hue_delta *delta_set, struct bt_mesh_light_hue_status *rsp);\nstatic void light_hue_move_set(struct bt_mesh_light_hue_srv *srv, struct bt_mesh_msg_ctx *ctx, const struct bt_mesh_light_hue_move *move, struct bt_mesh_light_hue_status *rsp);\n\nstatic void light_sat_set(struct bt_mesh_light_sat_srv *srv, struct bt_mesh_msg_ctx *ctx, const struct bt_mesh_light_sat *set, struct bt_mesh_light_sat_status *rsp);\nstatic void light_sat_get(struct bt_mesh_light_sat_srv *srv, struct bt_mesh_msg_ctx *ctx, struct bt_mesh_light_sat_status *rsp);\t\t\t  \n/* End Pre-declarations */\n\nstatic const struct bt_mesh_lightness_srv_handlers lightness_srv_handlers = {\n\t.light_set = light_set,\n\t.light_get = light_get,\n};\n\nstatic const struct bt_mesh_light_hue_srv_handlers light_hue_handlers = {\n\t.set = light_hue_set,\n\t.get = light_hue_get,\n\t.delta_set = light_hue_delta_set,\n\t.move_set = light_hue_move_set\n};\nstatic const struct bt_mesh_light_sat_srv_handlers light_sat_handlers = {\n\t.get = light_sat_get,\n\t.set = light_sat_set\n};\n"
+    ],
+    "description": "18 - model_handler.c - callbacks"
+  },
+  "20 - model_handler.c - state storage": {
+    "prefix": [
+      "tc20"
+    ],
+    "body": [
+      "struct light_hsl_ctx {\n\tconst struct bt_mesh_light_hsl_srv *hsl_srv;\n\n\tstruct k_work_delayable lvl_per_work;\n\tuint16_t target_lvl;\n\tuint16_t current_lvl;\n\tuint32_t lvl_time_per;\n\tuint32_t lvl_rem_time;\n\n\tstruct k_work_delayable hue_per_work;\n\tuint16_t target_hue;\n\tuint16_t current_hue;\n\tuint32_t hue_time_per;\n\tuint32_t hue_rem_time;\n\n\tstruct k_work_delayable sat_per_work;\n\tuint16_t target_sat;\n\tuint16_t current_sat;\n\tuint32_t sat_time_per;\n\tuint32_t sat_rem_time;\n};\n\nstatic struct light_hsl_ctx my_hsl_ctx = {\n\t.hsl_srv = &my_hsl_srv\n};\n"
+    ],
+    "description": "20 - model_handler.c - state storage"
+  },
+  "19 - model_handler.c - Server Models": {
+    "prefix": [
+      "tc19"
+    ],
+    "body": [
+      "static struct bt_mesh_lightness_srv my_lightness_srv = BT_MESH_LIGHTNESS_SRV_INIT(&lightness_srv_handlers);\nstatic struct bt_mesh_light_hsl_srv my_hsl_srv = BT_MESH_LIGHT_HSL_SRV_INIT(&my_lightness_srv, &light_hue_handlers, &light_sat_handlers);\nstatic struct bt_mesh_light_ctrl_srv my_light_ctrl_srv = BT_MESH_LIGHT_CTRL_SRV_INIT(&my_lightness_srv);\n"
+    ],
+    "description": "19 - model_handler.c - Server Models"
+  },
+  "21 - model_handler.c - lightness": {
+    "prefix": [
+      "tc21"
+    ],
+    "body": [
+      "static void start_new_light_trans(const struct bt_mesh_lightness_set *set,\n\t\t\t\t  struct light_hsl_ctx *ctx)\n{\n\tuint32_t step_cnt = abs(set->lvl - ctx->current_lvl);\n\tuint32_t time = set->transition ? set->transition->time : 0;\n\tuint32_t delay = set->transition ? set->transition->delay : 0;\n\n\tctx->target_lvl = set->lvl;\n\tctx->lvl_time_per = (step_cnt ? time / step_cnt : 0);\n\tctx->lvl_rem_time = time;\n\tk_work_reschedule(&ctx->lvl_per_work, K_MSEC(delay));\n\n\tprintk(\"New light transition-> Lvl: %d, Time: %d, Delay: %d\\n\",\n\t       set->lvl, time, delay);\n}\n\nstatic void periodic_led_work(struct k_work *work)\n{\n\tstruct light_hsl_ctx *lh_ctx = &my_hsl_ctx;\n\tlh_ctx->lvl_rem_time -= lh_ctx->lvl_time_per;\n\n\tif ((lh_ctx->lvl_rem_time <= lh_ctx->lvl_time_per) ||\n\t    (abs(lh_ctx->target_lvl - lh_ctx->current_lvl) <= 1)) {\n\n\t\tstruct bt_mesh_lightness_status status = {\n\t\t\t.current = lh_ctx->target_lvl,\n\t\t\t.target = lh_ctx->target_lvl,\n\t\t};\n\n\t\tlh_ctx->current_lvl = lh_ctx->target_lvl;\n\t\tlh_ctx->lvl_rem_time = 0;\n\n\t\tbt_mesh_lightness_srv_pub(lh_ctx->hsl_srv->lightness, NULL, &status);\n\n\t\tstruct bt_mesh_light_hsl_status hsl_status = {\n\t\t\t.params = {\n\t\t\t\t.hue = lh_ctx->current_hue,\n\t\t\t\t.lightness = lh_ctx->current_lvl,\n\t\t\t\t.saturation = lh_ctx->current_sat,\n\t\t\t},\n\t\t\t.remaining_time = 0,\n\t\t};\n\n\t\tbt_mesh_light_hsl_srv_pub(lh_ctx->hsl_srv, NULL, &hsl_status);\n\t} else {\n\t\tlh_ctx->current_lvl += lh_ctx->target_lvl > lh_ctx->current_lvl ? 1 : -1;\n\t\tk_work_reschedule(&lh_ctx->lvl_per_work, K_MSEC(lh_ctx->lvl_time_per));\n\t}\n\n\tstruct bt_mesh_light_hsl hsl = {\n\t\t.hue = lh_ctx->current_hue,\n\t\t.lightness = lh_ctx->current_lvl,\n\t\t.saturation = lh_ctx->current_sat,\n\t};\n\n\tset_led_strip(\n\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_RED), \n\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_GREEN),\n\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_BLUE));\n\n\tprintk(\"Current light lvl: %u/65535\\n\", lh_ctx->current_lvl);\n}\n\nstatic void light_set(struct bt_mesh_lightness_srv *srv,\n\t\t      struct bt_mesh_msg_ctx *ctx,\n\t\t      const struct bt_mesh_lightness_set *set,\n\t\t      struct bt_mesh_lightness_status *rsp)\n{\n\tstruct light_hsl_ctx *lh_ctx = &my_hsl_ctx;\n\n\tif (lh_ctx->current_lvl == set->lvl) { \n\t\t// we're already at the desired level, don't start a new transition\n\t\tlh_ctx->target_lvl = set->lvl;\n\t\tlh_ctx->lvl_rem_time = 0;\n\n\t\t// struct bt_mesh_lightness_status status = {\n\t\t// \t.current = lh_ctx->target_lvl,\n\t\t// \t.target = lh_ctx->target_lvl,\n\t\t// };\n\n\t\t// bt_mesh_lightness_srv_pub(lh_ctx->hsl_srv->lightness, NULL, &status);\n\n\t\tstruct bt_mesh_light_hsl hsl = {\n\t\t\t.hue = lh_ctx->current_hue,\n\t\t\t.lightness = lh_ctx->current_lvl,\n\t\t\t.saturation = lh_ctx->current_sat,\n\t\t};\n\n\t\tset_led_strip(\n\t\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_RED), \n\t\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_GREEN),\n\t\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_BLUE));\n\t}\n\telse {\n\t\tstart_new_light_trans(set, lh_ctx);\n\t}\n\trsp->current = lh_ctx->current_lvl;\n\trsp->target = lh_ctx->target_lvl;\n\trsp->remaining_time = set->transition ? set->transition->time : 0;\n}\n\nstatic void light_get(struct bt_mesh_lightness_srv *srv,\n\t\t      struct bt_mesh_msg_ctx *ctx,\n\t\t      struct bt_mesh_lightness_status *rsp)\n{\n\tstruct light_hsl_ctx *lh_ctx = &my_hsl_ctx;\n\n\trsp->current = lh_ctx->current_lvl;\n\trsp->target = lh_ctx->target_lvl;\n\trsp->remaining_time = lh_ctx->lvl_rem_time;\n}\n"
+    ],
+    "description": "21 - model_handler.c - lightness"
+  },
+  "22 - model_handler.c - hue": {
+    "prefix": [
+      "tc22"
+    ],
+    "body": [
+      "static void start_new_hue_trans(const struct bt_mesh_light_hue *set,\n\t\t\t\t  struct light_hsl_ctx *ctx)\n{\n\tuint32_t step_cnt = abs(set->lvl - ctx->current_hue);\n\tuint32_t time = set->transition ? set->transition->time : 0;\n\tuint32_t delay = set->transition ? set->transition->delay : 0;\n\n\tctx->target_hue = set->lvl;\n\tctx->hue_time_per = (step_cnt ? time / step_cnt : 0);\n\tctx->hue_rem_time = time;\n\tk_work_reschedule(&ctx->hue_per_work, K_MSEC(delay));\n\n\tprintk(\"New hue transition-> Lvl: %d, Time: %d, Delay: %d\\n\",\n\t       set->lvl, time, delay);\n}\n\nstatic void periodic_hue_work(struct k_work *work)\n{\n\tstruct light_hsl_ctx *lh_ctx = &my_hsl_ctx;\n\tlh_ctx->hue_rem_time -= lh_ctx->hue_time_per;\n\n\tif ((lh_ctx->hue_rem_time <= lh_ctx->hue_time_per) ||\n\t    (abs(lh_ctx->target_hue - lh_ctx->current_hue) <= 1)) {\n\t\tstruct bt_mesh_light_hsl_status status = {\n\t\t\t.params = {\n\t\t\t\t.hue = lh_ctx->current_hue,\n\t\t\t\t.lightness = lh_ctx->current_lvl,\n\t\t\t\t.saturation = lh_ctx->current_sat,\n\t\t\t},\n\t\t\t.remaining_time = 0,\n\t\t};\n\n\t\tlh_ctx->current_hue = lh_ctx->target_hue;\n\t\tlh_ctx->hue_rem_time = 0;\n\n\t\tbt_mesh_light_hsl_srv_pub(lh_ctx->hsl_srv, NULL, &status);\n\t} else {\n\t\tlh_ctx->current_hue += lh_ctx->target_hue > lh_ctx->current_hue ? 1 : -1;\n\t\tk_work_reschedule(&lh_ctx->hue_per_work, K_MSEC(lh_ctx->hue_time_per));\n\t}\n\n\tstruct bt_mesh_light_hsl hsl = {\n\t\t.hue = lh_ctx->current_hue,\n\t\t.lightness = lh_ctx->current_lvl,\n\t\t.saturation = lh_ctx->current_sat,\n\t};\n\n\tset_led_strip(\n\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_RED), \n\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_GREEN),\n\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_BLUE));\n\n\tprintk(\"Current light hue: %u/65535\\n\", lh_ctx->current_hue);\n}\n\nstatic void light_hue_set(struct bt_mesh_light_hue_srv *srv,\n\t\t\t  struct bt_mesh_msg_ctx *ctx,\n\t\t\t  const struct bt_mesh_light_hue *set,\n\t\t\t  struct bt_mesh_light_hue_status *rsp)\n{\n\tstruct light_hsl_ctx *lh_ctx = &my_hsl_ctx;\n\n\tif (lh_ctx->current_hue == set->lvl) {\n\t\tlh_ctx->target_hue = set->lvl;\n\t\tlh_ctx->hue_rem_time = 0;\n\n\t\tstruct bt_mesh_light_hsl hsl = {\n\t\t\t.hue = lh_ctx->current_hue,\n\t\t\t.lightness = lh_ctx->current_lvl,\n\t\t\t.saturation = lh_ctx->current_sat,\n\t\t};\n\n\t\tset_led_strip(\n\t\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_RED), \n\t\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_GREEN),\n\t\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_BLUE));\n\n\t}\n\telse {\n\t\tstart_new_hue_trans(set, lh_ctx);\n\t}\n\n\trsp->current = lh_ctx->current_hue;\n\trsp->remaining_time = lh_ctx->hue_rem_time;\n\trsp->target = lh_ctx->target_hue;\n}\n\nstatic void light_hue_get(struct bt_mesh_light_hue_srv *srv,\n\t\t\t  struct bt_mesh_msg_ctx *ctx,\n\t\t\t  struct bt_mesh_light_hue_status *rsp)\n{\n\tstruct light_hsl_ctx *lh_ctx = &my_hsl_ctx;\n\n\trsp->current = lh_ctx->current_hue;\n\trsp->remaining_time = lh_ctx->hue_rem_time;\n\trsp->target = lh_ctx->target_hue;\n}\n\nstatic void light_hue_delta_set(\n\t\tstruct bt_mesh_light_hue_srv *srv,\n\t\tstruct bt_mesh_msg_ctx *ctx,\n\t\tconst struct bt_mesh_light_hue_delta *delta_set,\n\t\tstruct bt_mesh_light_hue_status *rsp)\n{\n\tstruct light_hsl_ctx *lh_ctx = &my_hsl_ctx;\n\n\t// TODO: Actually implement the delta process\n\n\trsp->current = lh_ctx->current_hue;\n\trsp->remaining_time = lh_ctx->hue_rem_time;\n\trsp->target = lh_ctx->target_hue;\n}\n\nstatic void light_hue_move_set(struct bt_mesh_light_hue_srv *srv,\n\t\t\t       struct bt_mesh_msg_ctx *ctx,\n\t\t\t       const struct bt_mesh_light_hue_move *move,\n\t\t\t       struct bt_mesh_light_hue_status *rsp)\n{\n\tstruct light_hsl_ctx *lh_ctx = &my_hsl_ctx;\n\n\t// TODO: Actually implement the move process\n\n\trsp->current = lh_ctx->current_hue;\n\trsp->remaining_time = lh_ctx->hue_rem_time;\n\trsp->target = lh_ctx->target_hue;\n}\n"
+    ],
+    "description": "22 - model_handler.c - hue"
+  },
+  "23 - model_handler.c - sat": {
+    "prefix": [
+      "tc23"
+    ],
+    "body": [
+      "static void start_new_sat_trans(const struct bt_mesh_light_sat *set,\n\t\t\t\t  struct light_hsl_ctx *ctx)\n{\n\tuint32_t step_cnt = abs(set->lvl - ctx->current_sat);\n\tuint32_t time = set->transition ? set->transition->time : 0;\n\tuint32_t delay = set->transition ? set->transition->delay : 0;\n\n\tctx->target_sat = set->lvl;\n\tctx->sat_time_per = (step_cnt ? time / step_cnt : 0);\n\tctx->sat_rem_time = time;\n\tk_work_reschedule(&ctx->sat_per_work, K_MSEC(delay));\n\n\tprintk(\"New sat transition-> Lvl: %d, Time: %d, Delay: %d\\n\",\n\t       set->lvl, time, delay);\n}\n\nstatic void periodic_sat_work(struct k_work *work)\n{\n\tstruct light_hsl_ctx *lh_ctx = &my_hsl_ctx;\n\tlh_ctx->sat_rem_time -= lh_ctx->sat_time_per;\n\n\tif ((lh_ctx->sat_rem_time <= lh_ctx->sat_time_per) ||\n\t    (abs(lh_ctx->target_sat - lh_ctx->current_sat) <= 1)) {\n\t\tstruct bt_mesh_light_hsl_status status = {\n\t\t\t.params = {\n\t\t\t\t.hue = lh_ctx->current_hue,\n\t\t\t\t.lightness = lh_ctx->current_lvl,\n\t\t\t\t.saturation = lh_ctx->current_sat,\n\t\t\t},\n\t\t\t.remaining_time = 0,\n\t\t};\n\n\t\tlh_ctx->current_sat = lh_ctx->target_sat;\n\t\tlh_ctx->sat_rem_time = 0;\n\n\t\tbt_mesh_light_hsl_srv_pub(lh_ctx->hsl_srv, NULL, &status);\n\t} else {\n\t\tlh_ctx->current_sat += lh_ctx->target_sat > lh_ctx->current_sat ? 1 : -1;\n\t\tk_work_reschedule(&lh_ctx->sat_per_work, K_MSEC(lh_ctx->sat_time_per));\n\t}\n\n\tstruct bt_mesh_light_hsl hsl = {\n\t\t.hue = lh_ctx->current_hue,\n\t\t.lightness = lh_ctx->current_lvl,\n\t\t.saturation = lh_ctx->current_sat,\n\t};\n\n\tset_led_strip(\n\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_RED), \n\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_GREEN),\n\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_BLUE));\n\n\tprintk(\"Current light sat: %u/65535\\n\", lh_ctx->current_sat);\n}\n\nstatic void light_sat_set(struct bt_mesh_light_sat_srv *srv,\n\t\t\t  struct bt_mesh_msg_ctx *ctx,\n\t\t\t  const struct bt_mesh_light_sat *set,\n\t\t\t  struct bt_mesh_light_sat_status *rsp)\n{\n\tstruct light_hsl_ctx *lh_ctx = &my_hsl_ctx;\n\n\tif (lh_ctx->current_sat == set->lvl) {\n\t\tlh_ctx->target_sat = set->lvl;\n\t\tlh_ctx->sat_rem_time = 0;\n\n\t\tstruct bt_mesh_light_hsl hsl = {\n\t\t\t.hue = lh_ctx->current_hue,\n\t\t\t.lightness = lh_ctx->current_lvl,\n\t\t\t.saturation = lh_ctx->current_sat,\n\t\t};\n\n\t\tset_led_strip(\n\t\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_RED), \n\t\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_GREEN),\n\t\t\tbt_mesh_light_hsl_to_rgb(&hsl, BT_MESH_RGB_CH_BLUE));\n\t}\n\telse {\n\t\tstart_new_sat_trans(set, lh_ctx);\n\t}\n\n\trsp->current = lh_ctx->current_sat;\n\trsp->remaining_time = lh_ctx->sat_rem_time;\n\trsp->target = lh_ctx->target_sat;\n}\n\nstatic void light_sat_get(struct bt_mesh_light_sat_srv *srv,\n\t\t\t  struct bt_mesh_msg_ctx *ctx,\n\t\t\t  struct bt_mesh_light_sat_status *rsp)\n{\n\tstruct light_hsl_ctx *lh_ctx = &my_hsl_ctx;\n\n\trsp->current = lh_ctx->current_sat;\n\trsp->remaining_time = lh_ctx->sat_rem_time;\n\trsp->target = lh_ctx->target_sat;\n}\n"
+    ],
+    "description": "23 - model_handler.c - sat"
+  },
+  "24 - model_handler.c - mesh elements": {
+    "prefix": [
+      "tc24"
+    ],
+    "body": [
+      "static struct bt_mesh_elem elements[] = {\n\tBT_MESH_ELEM(1,\n\t\t     BT_MESH_MODEL_LIST(\n\t\t\t     BT_MESH_MODEL_CFG_SRV,\n\t\t\t     BT_MESH_MODEL_HEALTH_SRV(&health_srv, &health_pub),\n\t\t\t     BT_MESH_MODEL_LIGHTNESS_SRV(&my_lightness_srv),\n\t\t\t\t BT_MESH_MODEL_LIGHT_HSL_SRV(&my_hsl_srv)),\n\t\t     BT_MESH_MODEL_NONE),\n\tBT_MESH_ELEM(2,\n\t\t     BT_MESH_MODEL_LIST(\n\t\t\t\t BT_MESH_MODEL_LIGHT_HUE_SRV(&my_hsl_srv.hue)),\n\t\t     BT_MESH_MODEL_NONE),\n\tBT_MESH_ELEM(3,\n\t\t\t BT_MESH_MODEL_LIST(\n\t\t\t\tBT_MESH_MODEL_LIGHT_SAT_SRV(&my_hsl_srv.sat)),\n\t\t\t BT_MESH_MODEL_NONE),\n\tBT_MESH_ELEM(4,\n\t\t\t BT_MESH_MODEL_LIST(\n\t\t\t     BT_MESH_MODEL_LIGHT_CTRL_SRV(&my_light_ctrl_srv)),\n\t\t\t BT_MESH_MODEL_NONE),\n};\n"
+    ],
+    "description": "24 - model_handler.c - mesh elements"
+  },
+  "25 - model_handler.c - delayables": {
+    "prefix": [
+      "tc25"
+    ],
+    "body": [
+      "\tk_work_init_delayable(&my_hsl_ctx.lvl_per_work, periodic_led_work);\n\tk_work_init_delayable(&my_hsl_ctx.hue_per_work, periodic_hue_work);\n\tk_work_init_delayable(&my_hsl_ctx.sat_per_work, periodic_sat_work);\n"
+    ],
+    "description": "25 - model_handler.c - delayables"
+  },
+  "26 - prj.conf - general": {
+    "prefix": [
+      "tc26"
+    ],
+    "body": [
+      "CONFIG_SYSTEM_WORKQUEUE_STACK_SIZE=2048\nCONFIG_MAIN_STACK_SIZE=4096\nCONFIG_BT_RX_STACK_SIZE=4096\nCONFIG_BT_MESH_ADV_STACK_SIZE=4096\nCONFIG_FLASH=y\nCONFIG_FLASH_MAP=y\nCONFIG_NVS=y\nCONFIG_SETTINGS=y\nCONFIG_HWINFO=y\nCONFIG_DK_LIBRARY=y\nCONFIG_PWM=y\nCONFIG_PARTITION_MANAGER_ENABLED=y\nCONFIG_PM_SINGLE_IMAGE=y\nCONFIG_PM_PARTITION_SIZE_SETTINGS_STORAGE=0x8000\n"
+    ],
+    "description": "26 - prj.conf - general"
+  },
+  "27 - prj.conf - Bluetooth": {
+    "prefix": [
+      "tc27"
+    ],
+    "body": [
+      "CONFIG_BT=y\nCONFIG_BT_SMP=y\nCONFIG_BT_COMPANY_ID=0x0059\nCONFIG_BT_DEVICE_NAME=\"Mesh Light Fixture\"\nCONFIG_BT_L2CAP_DYNAMIC_CHANNEL=y\nCONFIG_BT_L2CAP_TX_MTU=69\nCONFIG_BT_L2CAP_TX_BUF_COUNT=8\nCONFIG_BT_OBSERVER=y\nCONFIG_BT_PERIPHERAL=y\n"
+    ],
+    "description": "27 - prj.conf - Bluetooth"
+  },
+  "28 - prj.conf - Mesh Config": {
+    "prefix": [
+      "tc28"
+    ],
+    "body": [
+      "CONFIG_BT_MESH=y\nCONFIG_BT_MESH_RELAY=y\nCONFIG_BT_MESH_FRIEND=y\nCONFIG_BT_MESH_ADV_BUF_COUNT=13\nCONFIG_BT_MESH_TX_SEG_MAX=10\nCONFIG_BT_MESH_TX_SEG_MSG_COUNT=3\nCONFIG_BT_MESH_PB_GATT=y\nCONFIG_BT_MESH_PROXY_USE_DEVICE_NAME=y\nCONFIG_BT_MESH_GATT_PROXY=y\nCONFIG_BT_MESH_DK_PROV=y\n"
+    ],
+    "description": "28 - prj.conf - Mesh Config"
+  },
+  "29 - prj.conf - Mesh Models": {
+    "prefix": [
+      "tc29"
+    ],
+    "body": [
+      "CONFIG_BT_MESH_LIGHT_CTRL_SRV=y\nCONFIG_BT_MESH_LIGHT_CTRL_SRV_TIME_ON=300\nCONFIG_BT_MESH_LIGHT_CTRL_SRV_OCCUPANCY_DELAY=500\nCONFIG_BT_MESH_LIGHT_CTRL_SRV_TIME_FADE_ON=1000\nCONFIG_BT_MESH_LIGHT_CTRL_SRV_TIME_PROLONG=120\nCONFIG_BT_MESH_LIGHT_CTRL_SRV_TIME_FADE_PROLONG=1000\nCONFIG_BT_MESH_LIGHT_CTRL_SRV_TIME_FADE_STANDBY_AUTO=1000\nCONFIG_BT_MESH_LIGHT_CTRL_SRV_TIME_FADE_STANDBY_MANUAL=1000\nCONFIG_BT_MESH_LIGHT_CTRL_SRV_TIME_MANUAL=30\nCONFIG_BT_MESH_LIGHT_CTRL_SRV_RESUME_DELAY=0\nCONFIG_BT_MESH_LIGHT_HSL_SRV=y\n"
+    ],
+    "description": "29 - prj.conf - Mesh Models"
+  },
+  "30 - prj.conf - Debug Logging": {
+    "prefix": [
+      "tc30"
+    ],
+    "body": [
+      "# Debug Logging\nCONFIG_PRINTK=y\nCONFIG_LOG=y\nCONFIG_LOG_PRINTK=y\nCONFIG_LOG_MODE_MINIMAL=n\nCONFIG_LOG_MODE_DEFERRED=y\nCONFIG_BT_DEBUG_LOG=y\nCONFIG_BT_MESH_DEBUG=y\nCONFIG_BT_MESH_DEBUG_MODEL=y\nCONFIG_BT_MESH_DEBUG_SETTINGS=y\nCONFIG_USE_SEGGER_RTT=y\nCONFIG_UART_RTT=y\nCONFIG_RTT_CONSOLE=y\nCONFIG_LOG_BACKEND_RTT=y\n"
+    ],
+    "description": "30 - prj.conf - Debug Logging"
+  },
+  "31 - prj.conf - LED Strip": {
+    "prefix": [
+      "tc31"
+    ],
+    "body": [
+      "# Neopixel LED Strip Support\nCONFIG_LED_STRIP=y\nCONFIG_LED_STRIP_LOG_LEVEL_DBG=y\nCONFIG_WS2812_STRIP=y\n"
+    ],
+    "description": "31 - prj.conf - LED Strip"
+  },
+  "32 - CMakeLists.txt - GLOB": {
+    "prefix": [
+      "tc32"
+    ],
+    "body": [
+      "FILE(GLOB app_sources src/*.c)\ntarget_sources(app PRIVATE ${app_sources})\n"
+    ],
+    "description": "32 - CMakeLists.txt - GLOB"
+  },
+  "33 - Adafruit - Device Tree": {
+    "prefix": [
+      "tc33"
+    ],
+    "body": [
+      "#include <dt-bindings/led/led.h>\n\n#include \"../include/nrf52-bindings.h\"\n\n&pinctrl {\n    pwm0_default: pwm0_default {\n\t\tgroup1 {\n\t\t\tpsels = <NRF_PSEL(PWM_OUT0, 1, 15)>;\n\t\t\tnordic,invert;\n\t\t};\n\t};\n\n\tpwm0_sleep: pwm0_sleep {\n\t\tgroup1 {\n\t\t\tpsels = <NRF_PSEL(PWM_OUT0, 1, 15)>;\n\t\t\tlow-power-enable;\n\t\t};\n\t};\n\n    spi2_default: spi2_default {\n        group1 {\n            psels = <NRF_PSEL(SPIM_SCK, 0, 7)>,\n                    <NRF_PSEL(SPIM_MOSI, 0, 16)>,\n                    <NRF_PSEL(SPIM_MISO, 0, 8)>;\n        };\n    };\n\n    spi2_sleep: spi2_sleep {\n        group1 {\n            psels = <NRF_PSEL(SPIM_SCK, 0, 7)>,\n                    <NRF_PSEL(SPIM_MOSI, 0, 16)>,\n                    <NRF_PSEL(SPIM_MISO, 0, 8)>;\n            low-power-enable;\n        };\n    };\n};\n\n&pwm0 {\n    status = \"okay\";\n    pinctrl-0 = <&pwm0_default>;\n\tpinctrl-1 = <&pwm0_sleep>;\n\tpinctrl-names = \"default\", \"sleep\";\n};\n\n&feather_spi { /* MOSI on feather_spi1 */\n    compatible = \"nordic,nrf-spim\";\n\n    led_strip: ws2812@0 {\n        compatible = \"worldsemi,ws2812-spi\";\n        label = \"WS2812\";\n\n        /* SPI */\n        reg = <0>; /* ignored, but necessary for SPI bindings */\n        spi-max-frequency = <SPI_FREQ>;\n\n        /* WS2812 */\n        chain-length = <8>; /* arbitrary; change at will */\n        color-mapping = <LED_COLOR_ID_GREEN\n                    LED_COLOR_ID_RED\n                    LED_COLOR_ID_BLUE>;\n        spi-one-frame = <ONE_FRAME>;\n        spi-zero-frame = <ZERO_FRAME>;\n    };\n};\n\n&spi2 {\n    compatible = \"nordic,nrf-spim\";\n    status = \"okay\";\n    pinctrl-0 = <&spi2_default>;\n    pinctrl-1 = <&spi2_sleep>;\n    pinctrl-names = \"default\", \"sleep\";\n\n    board_neopixel: ws2812@0 {\n        compatible = \"worldsemi,ws2812-spi\";\n        label = \"NEOPIXEL\";\n\n        /* SPI */\n        reg = <0>; /* ignored, but necessary for SPI bindings */\n        spi-max-frequency = <SPI_FREQ>;\n\n        /* WS2812 */\n        chain-length = <1>; /* arbitrary; change at will */\n        color-mapping = <LED_COLOR_ID_GREEN\n                    LED_COLOR_ID_RED\n                    LED_COLOR_ID_BLUE>;\n        spi-one-frame = <ONE_FRAME>;\n        spi-zero-frame = <ZERO_FRAME>;\n    };\n};\n\n\n/ {\n    pwmleds {\n        compatible = \"pwm-leds\";\n        red_led_pwm: led_pwm_0 {\n                pwms = <&pwm0 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;\n                label = \"Red PWM LED\";\n        };\n    };\n\n    aliases {\n        board-neopixel = &board_neopixel;\n        led-strip = &led_strip;\n        pwm-led0 = &red_led_pwm;\n    };\n};\n"
+    ],
+    "description": "33 - Adafruit - Device Tree"
+  },
+  "34 - Adafruit - conf": {
+    "prefix": [
+      "tc34"
+    ],
+    "body": [
+      "CONFIG_GPIO=y\nCONFIG_PWM=y\nCONFIG_PINCTRL=y\nCONFIG_SPI=y\nCONFIG_WS2812_STRIP_SPI=y\n"
+    ],
+    "description": "34 - Adafruit - conf"
+  },
+  "35 - Includes - neopixel updates": {
+    "prefix": [
+      "tc35"
+    ],
+    "body": [
+      "#define SET_DIR(_input, _dir, _min, _max, _incr) if ((_dir && _input > (_max - _incr)) || (!_dir && _input < (_incr - _min))) { _dir = !_dir; }\n#define SAFE_BOUNCE(_input, _dir, _min, _max, _incr) MIN(MAX(_min, (_input + (_dir ? _incr : (-1 * _incr)))), _max)\n\nint init_neopixel(void);\nvoid update_neopixel(void);\nvoid set_neopixel(uint8_t r, uint8_t g, uint8_t b);\n"
+    ],
+    "description": "35 - Includes - neopixel updates"
+  },
+  "36 - neopixel.c": {
+    "prefix": [
+      "tc36"
+    ],
+    "body": [
+      "#include <zephyr.h>\n#include <device.h>\n#include <logging/log.h>\n#include <drivers/led_strip.h>\n\n#include \"neopixel.h\"\n\nLOG_MODULE_REGISTER(app_neopixel, LOG_LEVEL_INF);\n\n#define NEOPIXEL_NODE\tDT_ALIAS(board_neopixel)\n\n#if DT_NODE_EXISTS(NEOPIXEL_NODE) == 1\nstatic struct led_rgb pixel = RGB(0x00, 0x00, 0x00);\nstatic const struct device *neopixel = DEVICE_DT_GET(NEOPIXEL_NODE);\nstatic bool rClimbing = true, gClimbing = true, bClimbing = true;\n#endif\n\nint init_neopixel(void) {\n#if DT_NODE_EXISTS(NEOPIXEL_NODE) == 1\n\tif (device_is_ready(neopixel)) {\n\t\tLOG_INF(\"Found NEOPIXEL device %s\", neopixel->name);\n\t} else {\n\t\tLOG_ERR(\"NEOPIXEL device %s is not ready\", neopixel->name);\n\t\treturn -ENOTSUP;\n\t}\n\n    set_neopixel(255, 0, 0);\n    k_sleep(K_MSEC(500));\n    set_neopixel(0, 255, 0);\n    k_sleep(K_MSEC(500));\n    set_neopixel(0, 0, 255);\n    k_sleep(K_MSEC(500));\n    set_neopixel(0, 0, 0);\n    k_sleep(K_MSEC(500));\n    for(int i = 0; i < 100; i++)\n    {\n        update_neopixel();\n        k_sleep(K_MSEC(50));\n    }\n#endif\n\n    return 0;\n}\n\nvoid set_neopixel(uint8_t r, uint8_t g, uint8_t b)\n{\n#if DT_NODE_EXISTS(NEOPIXEL_NODE) == 1\n    struct led_rgb my_pixel = RGB(r, g, b);\n    int rc = led_strip_update_rgb(neopixel, &my_pixel, 1);\n    if (rc) {\n        LOG_ERR(\"couldn't update neopixel: %d\", rc);\n    }\n#endif\n}\n\nvoid update_neopixel(void) {\n#if DT_NODE_EXISTS(NEOPIXEL_NODE) == 1\n    SET_DIR(pixel.r, rClimbing, 0, 255, 10)\n    SET_DIR(pixel.g, gClimbing, 0, 255, 7)\n    SET_DIR(pixel.b, bClimbing, 0, 255, 2)\n\n    uint8_t newR = SAFE_BOUNCE(pixel.r, rClimbing, 0, 255, 10),\n            newG = SAFE_BOUNCE(pixel.g, gClimbing, 0, 255, 7),\n            newB = SAFE_BOUNCE(pixel.b, bClimbing, 0, 255, 2);\n    pixel.r = newR; \n    pixel.g = newG;\n    pixel.b = newB;\n    int rc = led_strip_update_rgb(neopixel, &pixel, 1);\n    if (rc) {\n        LOG_ERR(\"couldn't update neopixel: %d\", rc);\n    }\n#endif\n}\n\n"
+    ],
+    "description": "36 - neopixel.c"
+  },
+  "37 - main.c - init_neopixel": {
+    "prefix": [
+      "tc37"
+    ],
+    "body": [
+      "\terr = init_neopixel();\n\tif (err) {\n\t\tprintk(\"Neopixel initialization failed...\\n\");\n\t}\n"
+    ],
+    "description": "37 - main.c - init_neopixel"
+  }
+}
